@@ -35,7 +35,7 @@ var addCacheItem = function(page) {
 
 var updateCacheItem = function(page, content) {
   var $ = cheerio.load(content);
-  cache[page.dest].body = $('body').text();
+  cache[page.dest].body = $('#content').text().replace(/\s+|\n|\t/gi, ' ');
 };
 
 var options = {
@@ -53,7 +53,8 @@ module.exports = function(params, callback) {
 
   var opts = params.assemble.options;
   opts.lunr = opts.lunr || {
-    dataPath: path.join(process.cwd(), 'search_index.json')
+    dataPath: path.join(process.cwd(), 'search_index.json'),
+    cachePath: path.join(process.cwd(), 'search_cache.json')
   };
 
   // call before each page is rendered to get
@@ -62,6 +63,7 @@ module.exports = function(params, callback) {
     addCacheItem(params.context.page);
     params.context.lunr = params.context.lunr || {};
     params.context.lunr.dataPath = params.context.lunr.dataPath || 'search_index.json';
+    params.context.lunr.cachePath = params.context.lunr.cachePath || 'search_cache.json';
   };
 
   var indexPageContent = function () {
@@ -74,6 +76,8 @@ module.exports = function(params, callback) {
     });
 
     fs.writeFileSync(opts.lunr.dataPath, JSON.stringify(idx));
+    fs.writeFileSync(opts.lunr.cachePath, JSON.stringify(cache));
+
   };
 
   switch(params.stage) {
